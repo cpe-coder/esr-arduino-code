@@ -14,11 +14,7 @@ Servo servo;
 #define littersPin D5
 #define startExtractionPin D5
 
-#define WIFI_SSID ""
-#define WIFI_PASSWORD ""
 
-#define API_KEY ""
-#define DATABASE_URL ""
 
 FirebaseData fbdo;
 FirebaseAuth auth;
@@ -76,6 +72,7 @@ void loop() {
     sendDataPrevMillis = millis();
 
     int sizeValue;
+    bool isExtractionStart;
 
     if (Firebase.RTDB.getBool(&fbdo, "Controls/power")) {
       if (fbdo.dataType() == "boolean"){
@@ -134,10 +131,14 @@ void loop() {
         if (fbdo.dataType() == "boolean"){
           startExtractionState = fbdo.boolData();
           Serial.println("Seccess: " + fbdo.dataPath() + ": " + startExtractionState + "(" + fbdo.dataType() + ")");
-          digitalWrite(dryPin, startExtractionState);
+          digitalWrite(startExtraction, startExtractionState);
+          isExtractionStart = startExtractionState;
         }
       } else {
         Serial.println("Failed to read Auto: " + fbdo.errorReason());
+      }
+
+      while (isExtractionStart) {
       }
 
     Serial.println("_______________________________________");
