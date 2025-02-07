@@ -7,11 +7,14 @@
 #include <Servo.h>
 
 Servo servo;
-#define powerPin D1
-#define extractPin D2
-#define boilPin D3
-#define dryPin D4
-#define pumpToBoilPin D5
+#define powerPin D0
+#define extractPin D1
+#define boilPin D2
+#define dryPin D3
+#define pumpToBoilPin D4
+#define rotateBoiler D5
+#define dryingStart D6
+#define pulvorizerStart D7
 
 
 
@@ -38,10 +41,16 @@ void setup() {
   pinMode(boilPin, OUTPUT);
   pinMode(dryPin, OUTPUT);
   pinMode(pumpToBoilPin, OUTPUT);
-  digitalWrite(powerPin, LOW);
-  digitalWrite(extractPin, LOW);
-  digitalWrite(dryPin, LOW);
-  digitalWrite(pumpToBoilPin, LOW);
+  pinMode(rotateBoiler, OUTPUT);
+  pinMode(dryingStart, OUTPUT);
+  pinMode(pulvorizerStart, OUTPUT);
+  digitalWrite(powerPin, HIGH);
+  digitalWrite(extractPin, HIGH);
+  digitalWrite(dryPin, HIGH);
+  digitalWrite(pumpToBoilPin, HIGH);
+  digitalWrite(rotateBoiler, HIGH);
+  digitalWrite(rotateBoiler, HIGH);
+  digitalWrite(pulvorizerStart, HIGH);
   Serial.begin(9600);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   Serial.print("Connecting to Wi-Fi");
@@ -77,6 +86,7 @@ void pumpToBoiler(int boilSizeValue, bool isExtractionStart) {
       delay(time);
       Serial.println(time);
       digitalWrite(pumpToBoilPin, LOW);
+      digitalWrite(rotateBoiler, HIGH)
       if (Firebase.RTDB.setBool(&fbdo, "Controls/startExtraction", false)) {
           Serial.println("Pump to Boiler is STOP...");
         }else {
