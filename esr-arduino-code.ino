@@ -12,7 +12,6 @@ Servo servo;
 #define boilPin D3
 #define dryPin D4
 #define pumpToBoilPin D5
-#define pumpToJuicePin D6
 
 
 
@@ -26,9 +25,7 @@ bool extractState = false;
 bool boilState = false;
 bool dryState = false;
 bool startExtractionState = false;
-bool startTransferingState = false;
 int boilSize = 0;
-int transferSize = 0;
 
 
 unsigned long sendDataPrevMillis = 0;
@@ -41,12 +38,10 @@ void setup() {
   pinMode(boilPin, OUTPUT);
   pinMode(dryPin, OUTPUT);
   pinMode(pumpToBoilPin, OUTPUT);
-  pinMode(pumpToJuicePin, OUTPUT);
   digitalWrite(powerPin, LOW);
   digitalWrite(extractPin, LOW);
   digitalWrite(dryPin, LOW);
   digitalWrite(pumpToBoilPin, LOW);
-  digitalWrite(pumpToJuicePin, LOW);
   Serial.begin(9600);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   Serial.print("Connecting to Wi-Fi");
@@ -90,37 +85,19 @@ void pumpToBoiler(int boilSizeValue, bool isExtractionStart) {
     }
 }
 
-void pumpToJuiceStorage(int transferSizeValue, bool isTransferingStart) {
-     if (transferSizeValue != 0 && isTransferingStart){
-      digitalWrite(pumpToJuicePin, HIGH);
-      Serial.println("Pump to juice storage is working...");
-      int time = 40000 * transferSizeValue;
-      delay(time);
-      Serial.println(time);
-      digitalWrite(pumpToJuicePin, LOW);
-      if (Firebase.RTDB.setBool(&fbdo, "Controls/startTransfering", false)) {
-          Serial.println("Pump to Juice Storage is STOP...");
-        }else {
-        Serial.println("Failed to read Auto: " + fbdo.errorReason());
-      }
-    }
-}
 
 void loop() {
   if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 1000 || sendDataPrevMillis == 0)) {
     sendDataPrevMillis = millis();
 
     int boilSizeValue;
-    int transferSizeValue;
     bool isExtractionStart;
-    bool isTransferingStart;
-    int millis = 1000;
 
     if (Firebase.RTDB.getBool(&fbdo, "Controls/power")) {
       if (fbdo.dataType() == "boolean"){
       powerState = fbdo.boolData();
       Serial.println("Seccess: " + fbdo.dataPath() + ": " + powerState + "(" + fbdo.dataType() + ")");
-      digitalWrite(powerPin, powerState);
+      digitalWrite(powerPin, powerState);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
       }
       
     } else {
@@ -200,8 +177,7 @@ void loop() {
       }
 
       pumpToBoiler(boilSizeValue, isExtractionStart);
-      pumpToJuiceStorage(transferSizeValue, isTransferingStart);
-  
+
  
 
     Serial.println("_______________________________________");
