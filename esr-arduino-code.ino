@@ -12,11 +12,16 @@ Servo servo;
 #define boilPin D2
 #define dryPin D3
 #define pumpToBoilPin D4
-#define rotateBoiler D5
-#define dryingStart D6
-#define pulvorizerStart D7
+#define pumpToJuicePin D5
+#define rotateBoiler D6
+#define dryingStart D7
+#define pulvorizerStart D8
 
+#define WIFI_SSID "So Good"
+#define WIFI_PASSWORD "helloworld"
 
+#define API_KEY "AIzaSyDIUvTegr1EgYJ9qgw7lqKSV2UoG75HKRk"
+#define DATABASE_URL "e-sugar-rush-default-rtdb.firebaseio.com/"
 
 FirebaseData fbdo;
 FirebaseAuth auth;
@@ -26,9 +31,11 @@ bool signupOK = false;
 bool powerState = false;
 bool extractState = false;
 bool boilState = false;
+bool startTransferingState = false;
 bool dryState = false;
 bool startExtractionState = false;
 int boilSize = 0;
+int transferSize = 0;
 
 
 unsigned long sendDataPrevMillis = 0;
@@ -41,6 +48,8 @@ void setup() {
   pinMode(boilPin, OUTPUT);
   pinMode(dryPin, OUTPUT);
   pinMode(pumpToBoilPin, OUTPUT);
+  pinMode(pumpToJuicePin, OUTPUT);
+  digitalWrite(pumpToJuicePin, LOW);
   pinMode(rotateBoiler, OUTPUT);
   pinMode(dryingStart, OUTPUT);
   pinMode(pulvorizerStart, OUTPUT);
@@ -86,9 +95,25 @@ void pumpToBoiler(int boilSizeValue, bool isExtractionStart) {
       delay(time);
       Serial.println(time);
       digitalWrite(pumpToBoilPin, LOW);
-      digitalWrite(rotateBoiler, HIGH)
+      digitalWrite(rotateBoiler, HIGH);
       if (Firebase.RTDB.setBool(&fbdo, "Controls/startExtraction", false)) {
           Serial.println("Pump to Boiler is STOP...");
+        }else {
+        Serial.println("Failed to read Auto: " + fbdo.errorReason());
+      }
+    }
+}
+
+void pumpToJuiceStorage(int transferSizeValue, bool isTransferingStart) {
+   if (transferSizeValue != 0 && isTransferingStart){
+      digitalWrite(pumpToJuicePin, HIGH);
+      Serial.println("Pump to juice storage is working...");
+      int time = 40000 * transferSizeValue;
+      delay(time);
+      Serial.println(time);
+      digitalWrite(pumpToJuicePin, LOW);
+      if (Firebase.RTDB.setBool(&fbdo, "Controls/startTransfering", false)) {
+          Serial.println("Pump to Juice Storage is STOP...");
         }else {
         Serial.println("Failed to read Auto: " + fbdo.errorReason());
       }
@@ -102,6 +127,8 @@ void loop() {
 
     int boilSizeValue;
     bool isExtractionStart;
+    int transferSizeValue;
+    bool isTransferingStart;
 
     if (Firebase.RTDB.getBool(&fbdo, "Controls/power")) {
       if (fbdo.dataType() == "boolean"){
@@ -187,6 +214,7 @@ void loop() {
       }
 
       pumpToBoiler(boilSizeValue, isExtractionStart);
+      pumpToJuiceStorage(transferSizeValue,isTransferingStart );
 
  
 
