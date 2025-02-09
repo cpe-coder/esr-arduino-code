@@ -1,13 +1,19 @@
 #include <Wire.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <Firebase_ESP_Client.h>
 #include "addons/TokenHelper.h"
 #include "addons/RTDBHelper.h"
-#include <Servo.h>
 
-Servo servo;
-#define pumpToJuicePin D6
+#define ONE_WIRE_BUS D0
+#define echoPin D1
+#define trigPin D2
+
+OneWire oneWire(ONE_WIRE_BUS);
+
+DallasTemperature sensors(&oneWire);
 
 #define WIFI_SSID ""
 #define WIFI_PASSWORD ""
@@ -20,9 +26,8 @@ FirebaseAuth auth;
 FirebaseConfig config;
 
 bool signupOK = false;
-bool startTransferingState = false;
-int transferSize = 0;
-
+long duration;
+int distance; 
 
 unsigned long sendDataPrevMillis = 0;
 
@@ -30,9 +35,10 @@ unsigned long sendDataPrevMillis = 0;
 
 
 void setup() {
-  pinMode(pumpToJuicePin, OUTPUT);
-  digitalWrite(pumpToJuicePin, LOW);
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
   Serial.begin(9600);
+  sensors.begin();
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   Serial.print("Connecting to Wi-Fi");
   while (WiFi.status() != WL_CONNECTED) {
@@ -60,28 +66,34 @@ void setup() {
 
 }
 
+
+
+
+
 void loop() {
+    digitalWrite(trigPin, LOW);
+    delayMicroseconds(2)                                                                                                     ;
+    digitalWrite(trigPin, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(trigPin, LOW);
+    duration = pulseIn(echoPin, HIGH);
+    // long formula = 0.017 * duration;
+    // distance = 10 - formula;
+    distance = duration*0.034/2;
+    Serial.print("Distance");
+    Serial.println(distance);
   // put your main code here, to run repeatedly:
    if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 1000 || sendDataPrevMillis == 0)) {
     sendDataPrevMillis = millis();
+     sensors.requestTemperatures(); 
+      float temp = sensors.getTempCByIndex(0);
 
-     int transferSizeValue;
-     bool isTransferingStart;
 
-     if (transferSizeValue != 0 && isTransferingStart){
-      digitalWrite(pumpToJuicePin, HIGH);
-      Serial.println("Pump to juice storage is working...");
-      int time = 40000 * transferSizeValue;
-      delay(time);
-      Serial.println(time);
-      digitalWrite(pumpToJuicePin, LOW);
-      if (Firebase.RTDB.setBool(&fbdo, "Controls/startTransfering", false)) {
-          Serial.println("Pump to Juice Storage is STOP...");
-        }else {
-        Serial.println("Failed to read Auto: " + fbdo.errorReason());
-      }
+      if (Firebase.RTDB.setFloat(&fbdo, "Sensors/temperature", temp)) {
+            Serial.print("Celsius temperature: ");
+            Serial.print(temp); 
+        }
     }
 
    }
 
-}

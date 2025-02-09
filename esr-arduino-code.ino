@@ -17,11 +17,7 @@ Servo servo;
 #define dryingStart D7
 #define pulvorizerStart D8
 
-#define WIFI_SSID "So Good"
-#define WIFI_PASSWORD "helloworld"
 
-#define API_KEY "AIzaSyDIUvTegr1EgYJ9qgw7lqKSV2UoG75HKRk"
-#define DATABASE_URL "e-sugar-rush-default-rtdb.firebaseio.com/"
 
 FirebaseData fbdo;
 FirebaseAuth auth;
