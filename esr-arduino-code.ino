@@ -88,15 +88,13 @@ void pumpToBoiler(int boilSizeValue, bool isExtractionStart) {
       digitalWrite(pumpToBoilPin, HIGH);
       Serial.println("Pump to Boiler is working...");
       int time = 40000 * boilSizeValue;
+      Firebase.RTDB.setInt(&fbdo, "Timer/juiceToBoiler", time);
       delay(time);
       Serial.println(time);
       digitalWrite(pumpToBoilPin, LOW);
       digitalWrite(rotateBoiler, HIGH);
-      if (Firebase.RTDB.setBool(&fbdo, "Controls/startExtraction", false)) {
-          Serial.println("Pump to Boiler is STOP...");
-        }else {
-        Serial.println("Failed to read Auto: " + fbdo.errorReason());
-      }
+      Firebase.RTDB.setBool(&fbdo, "Controls/startExtraction", false);
+      Serial.println("Pump to Boiler is STOP...");
     }
 }
 
@@ -105,14 +103,12 @@ void pumpToJuiceStorage(int transferSizeValue, bool isTransferingStart) {
       digitalWrite(pumpToJuicePin, HIGH);
       Serial.println("Pump to juice storage is working...");
       int time = 40000 * transferSizeValue;
+      Firebase.RTDB.setInt(&fbdo, "Timer/juiceToJuiceStorage", time);
       delay(time);
       Serial.println(time);
       digitalWrite(pumpToJuicePin, LOW);
-      if (Firebase.RTDB.setBool(&fbdo, "Controls/startTransfering", false)) {
-          Serial.println("Pump to Juice Storage is STOP...");
-        }else {
-        Serial.println("Failed to read Auto: " + fbdo.errorReason());
-      }
+      Firebase.RTDB.setBool(&fbdo, "Controls/startTransfering", false);
+      Serial.println("Pump to Juice Storage is STOP...");
     }
 }
 
