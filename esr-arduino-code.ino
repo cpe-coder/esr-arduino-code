@@ -16,6 +16,11 @@ Servo servo;
 #define rotateBoiler D6
 #define dryingStart D7
 
+#define WIFI_SSID "So Good"
+#define WIFI_PASSWORD "helloworld"
+
+#define API_KEY "AIzaSyDIUvTegr1EgYJ9qgw7lqKSV2UoG75HKRk"
+#define DATABASE_URL "e-sugar-rush-default-rtdb.firebaseio.com/"
 
 FirebaseData fbdo;
 FirebaseAuth auth;
@@ -102,9 +107,9 @@ void pumpToBoiler(int boilSizeValue, bool isExtractionStart) {
       Firebase.RTDB.setBool(&fbdo, "Pass/isDrying", true);
       Serial.println("Drying is working...");
       digitalWrite(dryingStart, HIGH);
-      Firebase.RTDB.setInt(&fbdo, "Pass/isDrying", dryingTime);
+      Firebase.RTDB.setInt(&fbdo, "Timer/drying", dryingTime);
       delay(dryingTime);
-       digitalWrite(dryingStart, LOW);
+      digitalWrite(dryingStart, LOW);
       Firebase.RTDB.setBool(&fbdo, "Pass/isDrying", false);
       Firebase.RTDB.setBool(&fbdo, "Pass/dryingStop", true);
       Serial.println("Drying is stop...");
