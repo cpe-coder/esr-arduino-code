@@ -28,6 +28,7 @@ FirebaseConfig config;
 bool signupOK = false;
 long duration;
 int distance; 
+bool toPulvorizer = false;
 
 unsigned long sendDataPrevMillis = 0;
 
@@ -66,8 +67,11 @@ void setup() {
 
 }
 
+void pulvorizerFunction(int boilSizeValue, bool isToPulvorizer) {
+  if(isToPulvorizer){
 
-
+  }
+}
 
 
 void loop() {
@@ -88,11 +92,28 @@ void loop() {
      sensors.requestTemperatures(); 
       float temp = sensors.getTempCByIndex(0);
 
+      int boilSizeValue;
+      bool isToPulvorizer;
+      Firebase.RTDB.setFloat(&fbdo, "Sensors/temperature", temp)) 
+      Serial.print("Celsius temperature: ");
+      Serial.print(temp); 
 
-      if (Firebase.RTDB.setFloat(&fbdo, "Sensors/temperature", temp)) {
-            Serial.print("Celsius temperature: ");
-            Serial.print(temp); 
-        }
+       if (Firebase.RTDB.getInt(&fbdo, "Sizes/boilSize")) {
+          boilSize = fbdo.intData();
+          Serial.print("Seccess! Boil: ");
+          Serial.println(boilSize);
+          boilSizeValue = boilSize;
+      }
+
+       if (Firebase.RTDB.getBool(&fbdo, "Sizes/dryingStop")) {
+          toPulvorizer = fbdo.intData();
+          Serial.print("Seccess! Drying Status: ");
+          Serial.println(toPulvorizer);
+          isToPulvorizer = toPulvorizer;
+      }
+
+      dryingFunction(boilSizeValue, isToPulvorizer);
+
     }
 
    }
