@@ -100,6 +100,9 @@ void pumpToBoiler(int boilSizeValue, bool isExtractionStart) {
       Firebase.RTDB.setBool(&fbdo, "Pass/isCooking", false);
       digitalWrite(rotateBoiler, LOW);
       Serial.println("Boiler is stop...");
+      Firebase.RTDB.setBool(&fbdo, "Pass/isTransferringToDrying", true);
+      delay(15000);
+      Firebase.RTDB.setBool(&fbdo, "Pass/isTransferringToDrying", false);
       Firebase.RTDB.setInt(&fbdo, "Timer/drying", dryingTime);
       Firebase.RTDB.setBool(&fbdo, "Pass/isDrying", true);
       Serial.println("Drying is working...");
