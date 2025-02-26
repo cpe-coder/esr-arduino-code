@@ -46,13 +46,13 @@ void setup() {
   pinMode(pumpToJuicePin, OUTPUT);
   pinMode(rotateBoiler, OUTPUT);
   pinMode(dryingStart, OUTPUT);
-  digitalWrite(powerPin, LOW);
-  digitalWrite(extractPin, LOW);
-  digitalWrite(dryPin, LOW);
-  digitalWrite(pumpToBoilPin, LOW);
-  digitalWrite(pumpToJuicePin, LOW);
-  digitalWrite(rotateBoiler, LOW);
-  digitalWrite(rotateBoiler, LOW);
+  digitalWrite(powerPin, HIGH);
+  digitalWrite(extractPin, HIGH);
+  digitalWrite(dryPin, HIGH);
+  digitalWrite(pumpToBoilPin, HIGH);
+  digitalWrite(pumpToJuicePin, HIGH);
+  digitalWrite(rotateBoiler, HIGH);
+  digitalWrite(rotateBoiler, HIGH);
   Serial.begin(9600);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   Serial.print("Connecting to Wi-Fi");
@@ -85,20 +85,20 @@ void pumpToBoiler(int boilSizeValue, bool isExtractionStart) {
       int time = 40000 * boilSizeValue;
       int cookingTime = 60000 * boilSizeValue;
       int dryingTime = 30000 * boilSizeValue;
-      digitalWrite(pumpToBoilPin, HIGH);
+      digitalWrite(pumpToBoilPin, LOW);
       Serial.println("Pump to Boiler is working...");
       Firebase.RTDB.setInt(&fbdo, "Timer/juiceToBoiler", time);
       delay(time);
-      digitalWrite(pumpToBoilPin, LOW);
+      digitalWrite(pumpToBoilPin, HIGH);
       Firebase.RTDB.setBool(&fbdo, "Controls/startExtraction", false);
       Serial.println("Pump to Boiler is STOP...");
       Firebase.RTDB.setInt(&fbdo, "Timer/cooking", cookingTime);
       Firebase.RTDB.setBool(&fbdo, "Pass/isCooking", true);
-      digitalWrite(rotateBoiler, HIGH);
+      digitalWrite(rotateBoiler, LOW);
       Serial.println("Boiler is working...");
       delay(cookingTime);
       Firebase.RTDB.setBool(&fbdo, "Pass/isCooking", false);
-      digitalWrite(rotateBoiler, LOW);
+      digitalWrite(rotateBoiler, HIGH);
       Serial.println("Boiler is stop...");
       Firebase.RTDB.setBool(&fbdo, "Pass/isTransferringToDrying", true);
       delay(15000);
@@ -106,9 +106,9 @@ void pumpToBoiler(int boilSizeValue, bool isExtractionStart) {
       Firebase.RTDB.setInt(&fbdo, "Timer/drying", dryingTime);
       Firebase.RTDB.setBool(&fbdo, "Pass/isDrying", true);
       Serial.println("Drying is working...");
-      digitalWrite(dryingStart, HIGH);
-      delay(dryingTime);
       digitalWrite(dryingStart, LOW);
+      delay(dryingTime);
+      digitalWrite(dryingStart, HIGH);
       Firebase.RTDB.setBool(&fbdo, "Pass/isDrying", false);
       Firebase.RTDB.setBool(&fbdo, "Pass/dryingStop", true);
       Serial.println("Drying is stop...");
@@ -117,7 +117,7 @@ void pumpToBoiler(int boilSizeValue, bool isExtractionStart) {
 
 void pumpToJuiceStorage(int transferSizeValue, bool isTransferingStart) {
    if (transferSizeValue != 0 && isTransferingStart){
-      digitalWrite(pumpToJuicePin, HIGH);
+      digitalWrite(pumpToJuicePin, LOW);
       Serial.println("Pump to juice storage is working...");
       int time = 40000 * transferSizeValue;
       Firebase.RTDB.setInt(&fbdo, "Timer/juiceToJuiceStorage", time);
