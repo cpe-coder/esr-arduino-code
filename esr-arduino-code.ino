@@ -15,6 +15,7 @@ Servo servo;
 #define pumpToJuicePin D5
 #define rotateBoiler D6
 #define dryingStart D7
+#define pushButton D8
 
 
 
@@ -23,14 +24,11 @@ FirebaseAuth auth;
 FirebaseConfig config;
 
 bool signupOK = false;
-bool powerState = false;
-bool extractState = false;
-bool boilState = false;
-bool startTransferingState = false;
-bool dryState = false;
-bool startExtractionState = false;
 int boilSize = 0;
 int transferSize = 0;
+
+bool lastButtonState = LOW;
+bool currentButtonState;
 
 
 unsigned long sendDataPrevMillis = 0;
@@ -38,6 +36,7 @@ unsigned long sendDataPrevMillis = 0;
 void setup() {
   servo.attach(D0);
   servo.write(0);
+  pinMode(buttonPin, INPUT_PULLUP);
   pinMode(powerPin, OUTPUT);
   pinMode(extractPin, OUTPUT);
   pinMode(boilPin, OUTPUT);
@@ -78,6 +77,16 @@ void setup() {
   config.token_status_callback = tokenStatusCallback;
   Firebase.begin(&config, &auth);
   Firebase.reconnectWiFi(true);
+}
+
+void emergencyButton() {
+  currentButtonState = digitalRead(buttonPin);
+
+  if (currentButtonState == LOW && lastButtonState == HIGH) {
+    delay(50); 
+  }
+
+  lastButtonState = currentButtonState;
 }
 
 void pumpToBoiler(int boilSizeValue, bool isExtractionStart) {
@@ -141,8 +150,9 @@ void loop() {
 
     if (Firebase.RTDB.getBool(&fbdo, "Controls/power")) {
       if (fbdo.dataType() == "boolean"){
-      powerState = fbdo.boolData();
-      Serial.println("Seccess: " + fbdo.dataPath() + ": " + powerState + "(" + fbdo.dataType() + ")");
+      bool powerStateStr = fbdo.boolData();
+      Serial.println("Seccess: " + fbdo.dataPath() + ": " + powerStateStr + "(" + fbdo.dataType() + ")");
+      bool powerState = (powerStateStr == false) ? HIGH : LOW;
       digitalWrite(powerPin, powerState);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
       }
       
@@ -150,12 +160,13 @@ void loop() {
       Serial.println("Failed to read Auto: " + fbdo.errorReason());
     }
 
-      if (Firebase.RTDB.getBool(&fbdo, "Controls/extract")) {
-        if (fbdo.dataType() == "boolean"){
-          extractState = fbdo.boolData();
-          Serial.println("Seccess: " + fbdo.dataPath() + ": " + extractState + "(" + fbdo.dataType() + ")");
-          digitalWrite(extractPin, extractState);
-      }
+    if (Firebase.RTDB.getBool(&fbdo, "Controls/extract")) {
+      if (fbdo.dataType() == "boolean"){
+        bool extractStateStr = fbdo.boolData();
+        Serial.println("Seccess: " + fbdo.dataPath() + ": " + extractStateStr + "(" + fbdo.dataType() + ")");
+        bool extractState = (extractStateStr == false) ? HIGH : LOW;
+        digitalWrite(extractPin, extractState);
+    }
       
     } else {
       Serial.println("Failed to read Auto: " + fbdo.errorReason());
@@ -163,8 +174,9 @@ void loop() {
 
       if (Firebase.RTDB.getBool(&fbdo, "Controls/boil")) {
         if (fbdo.dataType() == "boolean"){
-          boilState = fbdo.boolData();
-          Serial.println("Seccess: " + fbdo.dataPath() + ": " + boilState + "(" + fbdo.dataType() + ")");
+          bool boilStateStr = fbdo.boolData();
+          Serial.println("Seccess: " + fbdo.dataPath() + ": " + boilStateStr + "(" + fbdo.dataType() + ")");
+          bool boilState = (boilStateStr == false) ? HIGH : LOW;
           digitalWrite(boilPin, boilState);
       }
       
@@ -174,8 +186,9 @@ void loop() {
       
       if (Firebase.RTDB.getBool(&fbdo, "Controls/dry")) {
         if (fbdo.dataType() == "boolean"){
-          dryState = fbdo.boolData();
-          Serial.println("Seccess: " + fbdo.dataPath() + ": " + dryState + "(" + fbdo.dataType() + ")");
+          bool dryStateStr = fbdo.boolData();
+          Serial.println("Seccess: " + fbdo.dataPath() + ": " + dryStateStr + "(" + fbdo.dataType() + ")");
+          bool dryState = (dryStateStr == false) ? HIGH : LOW;
           digitalWrite(dryPin, dryState);
         }
       } else {
@@ -203,8 +216,9 @@ void loop() {
 
       if (Firebase.RTDB.getBool(&fbdo, "Controls/startExtraction")) {
         if (fbdo.dataType() == "boolean"){
-          startExtractionState = fbdo.boolData();
-          Serial.println("Seccess: " + fbdo.dataPath() + ": " + startExtractionState + "(" + fbdo.dataType() + ")");
+          bool startExtractionStateStr = fbdo.boolData();
+          Serial.println("Seccess: " + fbdo.dataPath() + ": " + startExtractionStateStr + "(" + fbdo.dataType() + ")");
+          bool startExtractionState = (startExtractionStateStr == false) ? HIGH : LOW;
           digitalWrite(pumpToBoilPin, startExtractionState);
           isExtractionStart = startExtractionState;
         }
@@ -213,10 +227,11 @@ void loop() {
       }
       if (Firebase.RTDB.getBool(&fbdo, "Controls/startTransfering")) {
         if (fbdo.dataType() == "boolean"){
-          startTransferingState = fbdo.boolData();
-          Serial.println("Seccess: " + fbdo.dataPath() + ": " + startTransferingState + "(" + fbdo.dataType() + ")");
+          bool startTransferingStateStr = fbdo.boolData();
+          Serial.println("Seccess: " + fbdo.dataPath() + ": " + startTransferingStateStr + "(" + fbdo.dataType() + ")");
+          bool startTransferingState = (startTransferingStateStr == false) ? HIGH : LOW;
           digitalWrite(pumpToJuicePin, startTransferingState);
-          isTransferingStart = startTransferingState;
+          isTransferingStart = startTransferingStateStr;
         }
       } else {
         Serial.println("Failed to read Auto: " + fbdo.errorReason());
@@ -224,7 +239,7 @@ void loop() {
 
       pumpToBoiler(boilSizeValue, isExtractionStart);
       pumpToJuiceStorage(transferSizeValue,isTransferingStart );
-
+      emergencyButton();
  
 
     Serial.println("_______________________________________");
