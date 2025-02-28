@@ -6,18 +6,21 @@
 #include "addons/RTDBHelper.h"
 #include <Servo.h>
 
-Servo servo;
 #define powerPin D0
 #define extractPin D1
 #define boilPin D2
-#define dryPin D3
-#define pumpToBoilPin D4
-#define pumpToJuicePin D5
-#define rotateBoiler D6
+#define rotateBoiler D3
+#define dryPin D4
+#define pumpToBoilPin D5
+#define pumpToJuicePin D6
 #define dryingStart D7
 #define pushButton D8
 
+#define WIFI_SSID "So Good"
+#define WIFI_PASSWORD "helloworld"
 
+#define API_KEY "AIzaSyDIUvTegr1EgYJ9qgw7lqKSV2UoG75HKRk"
+#define DATABASE_URL "e-sugar-rush-default-rtdb.firebaseio.com/"
 
 FirebaseData fbdo;
 FirebaseAuth auth;
@@ -34,9 +37,7 @@ bool currentButtonState;
 unsigned long sendDataPrevMillis = 0;
 
 void setup() {
-  servo.attach(D0);
-  servo.write(0);
-  pinMode(buttonPin, INPUT_PULLUP);
+  pinMode(pushButton, INPUT_PULLUP);
   pinMode(powerPin, OUTPUT);
   pinMode(extractPin, OUTPUT);
   pinMode(boilPin, OUTPUT);
@@ -50,7 +51,6 @@ void setup() {
   digitalWrite(dryPin, HIGH);
   digitalWrite(pumpToBoilPin, HIGH);
   digitalWrite(pumpToJuicePin, HIGH);
-  digitalWrite(rotateBoiler, HIGH);
   digitalWrite(rotateBoiler, HIGH);
   Serial.begin(9600);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
@@ -80,10 +80,21 @@ void setup() {
 }
 
 void emergencyButton() {
-  currentButtonState = digitalRead(buttonPin);
+  currentButtonState = digitalRead(pushButton);
 
   if (currentButtonState == LOW && lastButtonState == HIGH) {
-    delay(50); 
+      digitalWrite(extractPin, HIGH);
+      digitalWrite(dryPin, HIGH);
+      digitalWrite(pumpToBoilPin, HIGH);
+      digitalWrite(pumpToJuicePin, HIGH);
+      digitalWrite(rotateBoiler, HIGH);
+      Firebase.RTDB.setBool(&fbdo, "Controls/boil", false);
+      Firebase.RTDB.setBool(&fbdo, "Controls/dry", false);
+      Firebase.RTDB.setBool(&fbdo, "Controls/extract", false);
+      Firebase.RTDB.setBool(&fbdo, "Controls/startExtraction", false);
+      Firebase.RTDB.setBool(&fbdo, "Controls/startTransfering", false);
+      Firebase.RTDB.setBool(&fbdo, "Pass/isCooking", false);
+      Firebase.RTDB.setBool(&fbdo, "Pass/isDrying", false);
   }
 
   lastButtonState = currentButtonState;
@@ -140,7 +151,7 @@ void pumpToJuiceStorage(int transferSizeValue, bool isTransferingStart) {
 
 
 void loop() {
-  if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 1000 || sendDataPrevMillis == 0)) {
+  if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 500 || sendDataPrevMillis == 0)) {
     sendDataPrevMillis = millis();
 
     int boilSizeValue;
@@ -153,7 +164,9 @@ void loop() {
       bool powerStateStr = fbdo.boolData();
       Serial.println("Seccess: " + fbdo.dataPath() + ": " + powerStateStr + "(" + fbdo.dataType() + ")");
       bool powerState = (powerStateStr == false) ? HIGH : LOW;
-      digitalWrite(powerPin, powerState);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+      digitalWrite(powerPin, powerState);   
+      
+
       }
       
     } else {

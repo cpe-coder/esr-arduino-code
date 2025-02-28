@@ -28,11 +28,8 @@ FirebaseConfig config;
 bool signupOK = false;
 long duration;
 int distance; 
-bool toPulvorizer = false;
 
 unsigned long sendDataPrevMillis = 0;
-
-
 
 
 void setup() {
@@ -67,12 +64,6 @@ void setup() {
 
 }
 
-void pulvorizerFunction(int boilSizeValue, bool isToPulvorizer) {
-  if(isToPulvorizer){
-
-  }
-}
-
 
 void loop() {
     digitalWrite(trigPin, LOW);
@@ -81,12 +72,11 @@ void loop() {
     delayMicroseconds(10);
     digitalWrite(trigPin, LOW);
     duration = pulseIn(echoPin, HIGH);
-    // long formula = 0.017 * duration;
-    // distance = 10 - formula;
     distance = duration*0.034/2;
     Serial.print("Distance");
     Serial.println(distance);
-  // put your main code here, to run repeatedly:
+
+
    if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 1000 || sendDataPrevMillis == 0)) {
     sendDataPrevMillis = millis();
      sensors.requestTemperatures(); 
@@ -112,7 +102,6 @@ void loop() {
           isToPulvorizer = toPulvorizer;
       }
 
-      dryingFunction(boilSizeValue, isToPulvorizer);
 
     }
 
