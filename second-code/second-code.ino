@@ -10,11 +10,12 @@
 #define ONE_WIRE_BUS D0
 #define echoPin D1
 #define trigPin D2
-#define echoPin1 D3
-#define trigPin1 D4
-#define MAX_DISTANCE_CM 40  
-#define MAX_DISTANCE_CM1 70  
+#define ECHO_PIN D3
+#define TRIG_PIN D4
+#define MAX_DISTANCE_CM 30  
+#define MAX_DISTANCE_CM_B 50  
 #define MIN_DISTANCE_CM 4 
+#define MIN_DISTANCE_CM_B 4 
 
 OneWire oneWire(ONE_WIRE_BUS);
 
@@ -31,6 +32,8 @@ FirebaseAuth auth;
 FirebaseConfig config;
 
 bool signupOK = false;
+long jsduration;
+int jsdistance; 
 long duration;
 int distance; 
 
@@ -40,8 +43,8 @@ unsigned long sendDataPrevMillis = 0;
 void setup() {
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
-  pinMode(trigPin1, OUTPUT);
-  pinMode(echoPin1, INPUT);
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
   Serial.begin(9600);
   sensors.begin();
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
@@ -77,19 +80,19 @@ float getJuiceStorageDistance() {
   digitalWrite(trigPin, HIGH);
   delayMicroseconds(10);
   digitalWrite(trigPin, LOW);
-  long duration = pulseIn(echoPin, HIGH);
-  float distance = duration * 0.0343 / 2;  // Convert to cm
+  long jsduration = pulseIn(echoPin, HIGH);
+  float jsdistance = jsduration * 0.0343 / 2;  // Convert to cm
 
-  return distance;
+  return jsdistance;
 }
 
 float getMainStorageDistance() {
-  digitalWrite(trigPin1, LOW);
+  digitalWrite(TRIG_PIN, LOW);
   delayMicroseconds(2)                                                                                                     ;
-  digitalWrite(trigPin1, HIGH);
+  digitalWrite(TRIG_PIN, HIGH);
   delayMicroseconds(10);
-  digitalWrite(trigPin1, LOW);
-  long duration = pulseIn(echoPin1, HIGH);
+  digitalWrite(TRIG_PIN, LOW);
+  long duration = pulseIn(ECHO_PIN, HIGH);
   float distance = duration * 0.0343 / 2;  // Convert to cm
 
   return distance;
@@ -100,15 +103,15 @@ int mapJuiceStorageDistanceToLevel(float juiceStorageDistance) {
   if (juiceStorageDistance < MIN_DISTANCE_CM) juiceStorageDistance = MIN_DISTANCE_CM;
   if (juiceStorageDistance > MAX_DISTANCE_CM) juiceStorageDistance = MAX_DISTANCE_CM;
 
-  int level = map(juiceStorageDistance, MAX_DISTANCE_CM, MIN_DISTANCE_CM, 0, 5);
-  return level;
+  int jslevel = map(juiceStorageDistance, MAX_DISTANCE_CM, MIN_DISTANCE_CM, 0, 5);
+  return jslevel;
 }
 
 int mapMainStorageDistanceToLevel(float mainStorageDistance) {
-  if (mainStorageDistance < MIN_DISTANCE_CM) mainStorageDistance = MIN_DISTANCE_CM;
-  if (mainStorageDistance > MAX_DISTANCE_CM1) mainStorageDistance = MAX_DISTANCE_CM1;
+  if (mainStorageDistance < MIN_DISTANCE_CM_B) mainStorageDistance = MIN_DISTANCE_CM_B;
+  if (mainStorageDistance > MAX_DISTANCE_CM_B) mainStorageDistance = MAX_DISTANCE_CM_B;
 
-  int level = map(mainStorageDistance, MAX_DISTANCE_CM1, MIN_DISTANCE_CM, 0, 5);
+  int level = map(mainStorageDistance, MAX_DISTANCE_CM_B, MIN_DISTANCE_CM_B, 0, 15);
   return level;
 }
 
@@ -121,8 +124,8 @@ void loop() {
     Serial.print(" cm, Water Level: ");
     Serial.println(juiceStorageLevel);
 
-    float mainStorageDistance = getJuiceStorageDistance();
-    int mainStorageLevel = mapJuiceStorageDistanceToLevel(mainStorageDistance);
+    float mainStorageDistance = getMainStorageDistance();
+    int mainStorageLevel = mapMainStorageDistanceToLevel(mainStorageDistance);
     Serial.print("MainStorageDistance: ");
     Serial.print(mainStorageDistance);
     Serial.print(" cm, Water Level: ");

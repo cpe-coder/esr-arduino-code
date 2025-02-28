@@ -40,14 +40,11 @@ void setup() {
   pinMode(powerPin, OUTPUT);
   pinMode(extractPin, OUTPUT);
   pinMode(boilPin, OUTPUT);
-  pinMode(dryPin, OUTPUT);
   pinMode(pumpToBoilPin, OUTPUT);
   pinMode(pumpToJuicePin, OUTPUT);
   pinMode(rotateBoiler, OUTPUT);
-  pinMode(dryingStart, OUTPUT);
   digitalWrite(powerPin, HIGH);
   digitalWrite(extractPin, HIGH);
-  digitalWrite(dryPin, HIGH);
   digitalWrite(pumpToBoilPin, HIGH);
   digitalWrite(pumpToJuicePin, HIGH);
   digitalWrite(rotateBoiler, HIGH);
@@ -83,7 +80,6 @@ void emergencyButton() {
 
   if (currentButtonState == LOW && lastButtonState == HIGH) {
       digitalWrite(extractPin, HIGH);
-      digitalWrite(dryPin, HIGH);
       digitalWrite(pumpToBoilPin, HIGH);
       digitalWrite(pumpToJuicePin, HIGH);
       digitalWrite(rotateBoiler, HIGH);
@@ -124,10 +120,6 @@ void pumpToBoiler(int boilSizeValue, bool isExtractionStart) {
       Firebase.RTDB.setBool(&fbdo, "Pass/isTransferringToDrying", false);
       Firebase.RTDB.setInt(&fbdo, "Timer/drying", dryingTime);
       Firebase.RTDB.setBool(&fbdo, "Pass/isDrying", true);
-      Serial.println("Drying is working...");
-      digitalWrite(dryingStart, LOW);
-      delay(dryingTime);
-      digitalWrite(dryingStart, HIGH);
       Firebase.RTDB.setBool(&fbdo, "Pass/isDrying", false);
       Firebase.RTDB.setBool(&fbdo, "Pass/dryingStop", true);
       Serial.println("Drying is stop...");
@@ -196,16 +188,7 @@ void loop() {
       Serial.println("Failed to read Auto: " + fbdo.errorReason());
     }
       
-      if (Firebase.RTDB.getBool(&fbdo, "Controls/dry")) {
-        if (fbdo.dataType() == "boolean"){
-          bool dryStateStr = fbdo.boolData();
-          Serial.println("Seccess: " + fbdo.dataPath() + ": " + dryStateStr + "(" + fbdo.dataType() + ")");
-          bool dryState = (dryStateStr == false) ? HIGH : LOW;
-          digitalWrite(dryPin, dryState);
-        }
-      } else {
-        Serial.println("Failed to read Auto: " + fbdo.errorReason());
-      }
+     
 
       if (Firebase.RTDB.getInt(&fbdo, "Sizes/boilSize")) {
           boilSize = fbdo.intData();
