@@ -117,28 +117,29 @@ int mapMainStorageDistanceToLevel(float mainStorageDistance) {
 
 void loop() {
 
-    float juiceStorageDistance = getJuiceStorageDistance();
-    int juiceStorageLevel = mapJuiceStorageDistanceToLevel(juiceStorageDistance);
-    Serial.print("JuiceStorageDistance: ");
-    Serial.print(juiceStorageDistance);
-    Serial.print(" cm, Water Level: ");
-    Serial.println(juiceStorageLevel);
-
-    float mainStorageDistance = getMainStorageDistance();
-    int mainStorageLevel = mapMainStorageDistanceToLevel(mainStorageDistance);
-    Serial.print("MainStorageDistance: ");
-    Serial.print(mainStorageDistance);
-    Serial.print(" cm, Water Level: ");
-    Serial.println(mainStorageLevel);
-
-   if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 500 || sendDataPrevMillis == 0)) {
+   if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 1000 || sendDataPrevMillis == 0)) {
     sendDataPrevMillis = millis();
      sensors.requestTemperatures(); 
       float temp = sensors.getTempCByIndex(0);
-
+      float mainStorageDistance = getMainStorageDistance();
+      int mainStorageLevel = mapMainStorageDistanceToLevel(mainStorageDistance);
+      float juiceStorageDistance = getJuiceStorageDistance();
+      int juiceStorageLevel = mapJuiceStorageDistanceToLevel(juiceStorageDistance);
       Firebase.RTDB.setFloat(&fbdo, "Sensors/temperature", temp);
+      Firebase.RTDB.setInt(&fbdo, "Sensors/juiceStorage", juiceStorageLevel);
+      Firebase.RTDB.setInt(&fbdo, "Sensors/mainStorage", mainStorageLevel);
       Serial.print("Celsius temperature: ");
       Serial.print(temp); 
+
+      Serial.print("JuiceStorageDistance: ");
+      Serial.print(juiceStorageDistance);
+      Serial.print(" cm, Water Level: ");
+      Serial.println(juiceStorageLevel);
+
+      Serial.print("MainStorageDistance: ");
+      Serial.print(mainStorageDistance);
+      Serial.print(" cm, Water Level: ");
+      Serial.println(mainStorageLevel);
 
     }
 
