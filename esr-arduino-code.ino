@@ -10,11 +10,10 @@
 #define extractPin D1
 #define boilPin D2
 #define rotateBoiler D3
-#define dryPin D4
+#define pumpToMainStorage D4
 #define pumpToBoilPin D5
 #define pumpToJuicePin D6
-#define dryingStart D7
-#define pushButton D8
+#define pushButton D7
 
 #define WIFI_SSID "So Good"
 #define WIFI_PASSWORD "helloworld"
