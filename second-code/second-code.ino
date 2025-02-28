@@ -10,18 +10,21 @@
 #define ONE_WIRE_BUS D0
 #define echoPin D1
 #define trigPin D2
-#define MAX_DISTANCE_CM 30  
-#define MIN_DISTANCE_CM 2 
+#define echoPin1 D3
+#define trigPin1 D4
+#define MAX_DISTANCE_CM 40  
+#define MAX_DISTANCE_CM1 70  
+#define MIN_DISTANCE_CM 4 
 
 OneWire oneWire(ONE_WIRE_BUS);
 
 DallasTemperature sensors(&oneWire);
 
-#define WIFI_SSID ""
-#define WIFI_PASSWORD ""
+#define WIFI_SSID "So Good"
+#define WIFI_PASSWORD "helloworld"
 
-#define API_KEY ""
-#define DATABASE_URL ""
+#define API_KEY "AIzaSyDIUvTegr1EgYJ9qgw7lqKSV2UoG75HKRk"
+#define DATABASE_URL "e-sugar-rush-default-rtdb.firebaseio.com/"
 
 FirebaseData fbdo;
 FirebaseAuth auth;
@@ -37,6 +40,8 @@ unsigned long sendDataPrevMillis = 0;
 void setup() {
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
+  pinMode(trigPin1, OUTPUT);
+  pinMode(echoPin1, INPUT);
   Serial.begin(9600);
   sensors.begin();
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
@@ -66,7 +71,7 @@ void setup() {
 
 }
 
-float getDistance() {
+float getJuiceStorageDistance() {
   digitalWrite(trigPin, LOW);
   delayMicroseconds(2)                                                                                                     ;
   digitalWrite(trigPin, HIGH);
@@ -78,44 +83,61 @@ float getDistance() {
   return distance;
 }
 
+float getMainStorageDistance() {
+  digitalWrite(trigPin1, LOW);
+  delayMicroseconds(2)                                                                                                     ;
+  digitalWrite(trigPin1, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin1, LOW);
+  long duration = pulseIn(echoPin1, HIGH);
+  float distance = duration * 0.0343 / 2;  // Convert to cm
 
-int mapDistanceToLevel(float distance) {
-  if (distance < MIN_DISTANCE_CM) distance = MIN_DISTANCE_CM;
-  if (distance > MAX_DISTANCE_CM) distance = MAX_DISTANCE_CM;
+  return distance;
+}
 
-  int level = map(distance, MAX_DISTANCE_CM, MIN_DISTANCE_CM, 0, 5);
+
+int mapJuiceStorageDistanceToLevel(float juiceStorageDistance) {
+  if (juiceStorageDistance < MIN_DISTANCE_CM) juiceStorageDistance = MIN_DISTANCE_CM;
+  if (juiceStorageDistance > MAX_DISTANCE_CM) juiceStorageDistance = MAX_DISTANCE_CM;
+
+  int level = map(juiceStorageDistance, MAX_DISTANCE_CM, MIN_DISTANCE_CM, 0, 5);
+  return level;
+}
+
+int mapMainStorageDistanceToLevel(float mainStorageDistance) {
+  if (mainStorageDistance < MIN_DISTANCE_CM) mainStorageDistance = MIN_DISTANCE_CM;
+  if (mainStorageDistance > MAX_DISTANCE_CM1) mainStorageDistance = MAX_DISTANCE_CM1;
+
+  int level = map(mainStorageDistance, MAX_DISTANCE_CM1, MIN_DISTANCE_CM, 0, 5);
   return level;
 }
 
 void loop() {
-    // digitalWrite(trigPin, LOW);
-    // delayMicroseconds(2)                                                                                                     ;
-    // digitalWrite(trigPin, HIGH);
-    // delayMicroseconds(10);
-    // digitalWrite(trigPin, LOW);
-    // duration = pulseIn(echoPin, HIGH);
-    // distance = duration*0.034/2;
-    // Serial.print("Distance");
-    // Serial.println(distance);
 
-    float distance = getDistance();
-    int level = mapDistanceToLevel(distance);
- Serial.print("Distance: ");
-  Serial.print(distance);
-  Serial.print(" cm, Water Level: ");
-  Serial.println(level);
+    float juiceStorageDistance = getJuiceStorageDistance();
+    int juiceStorageLevel = mapJuiceStorageDistanceToLevel(juiceStorageDistance);
+    Serial.print("JuiceStorageDistance: ");
+    Serial.print(juiceStorageDistance);
+    Serial.print(" cm, Water Level: ");
+    Serial.println(juiceStorageLevel);
+
+    float mainStorageDistance = getJuiceStorageDistance();
+    int mainStorageLevel = mapJuiceStorageDistanceToLevel(mainStorageDistance);
+    Serial.print("MainStorageDistance: ");
+    Serial.print(mainStorageDistance);
+    Serial.print(" cm, Water Level: ");
+    Serial.println(mainStorageLevel);
 
    if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 500 || sendDataPrevMillis == 0)) {
     sendDataPrevMillis = millis();
      sensors.requestTemperatures(); 
       float temp = sensors.getTempCByIndex(0);
 
-      int boilSizeValue;
-      Firebase.RTDB.setFloat(&fbdo, "Sensors/temperature", temp)) 
+      Firebase.RTDB.setFloat(&fbdo, "Sensors/temperature", temp);
       Serial.print("Celsius temperature: ");
       Serial.print(temp); 
 
     }
 
-   }
+}
 
