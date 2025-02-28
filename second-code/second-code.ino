@@ -10,6 +10,8 @@
 #define ONE_WIRE_BUS D0
 #define echoPin D1
 #define trigPin D2
+#define MAX_DISTANCE_CM 30  
+#define MIN_DISTANCE_CM 2 
 
 OneWire oneWire(ONE_WIRE_BUS);
 
@@ -64,44 +66,54 @@ void setup() {
 
 }
 
+float getDistance() {
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2)                                                                                                     ;
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  long duration = pulseIn(echoPin, HIGH);
+  float distance = duration * 0.0343 / 2;  // Convert to cm
+
+  return distance;
+}
+
+
+int mapDistanceToLevel(float distance) {
+  if (distance < MIN_DISTANCE_CM) distance = MIN_DISTANCE_CM;
+  if (distance > MAX_DISTANCE_CM) distance = MAX_DISTANCE_CM;
+
+  int level = map(distance, MAX_DISTANCE_CM, MIN_DISTANCE_CM, 0, 5);
+  return level;
+}
 
 void loop() {
-    digitalWrite(trigPin, LOW);
-    delayMicroseconds(2)                                                                                                     ;
-    digitalWrite(trigPin, HIGH);
-    delayMicroseconds(10);
-    digitalWrite(trigPin, LOW);
-    duration = pulseIn(echoPin, HIGH);
-    distance = duration*0.034/2;
-    Serial.print("Distance");
-    Serial.println(distance);
+    // digitalWrite(trigPin, LOW);
+    // delayMicroseconds(2)                                                                                                     ;
+    // digitalWrite(trigPin, HIGH);
+    // delayMicroseconds(10);
+    // digitalWrite(trigPin, LOW);
+    // duration = pulseIn(echoPin, HIGH);
+    // distance = duration*0.034/2;
+    // Serial.print("Distance");
+    // Serial.println(distance);
 
+    float distance = getDistance();
+    int level = mapDistanceToLevel(distance);
+ Serial.print("Distance: ");
+  Serial.print(distance);
+  Serial.print(" cm, Water Level: ");
+  Serial.println(level);
 
-   if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 1000 || sendDataPrevMillis == 0)) {
+   if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 500 || sendDataPrevMillis == 0)) {
     sendDataPrevMillis = millis();
      sensors.requestTemperatures(); 
       float temp = sensors.getTempCByIndex(0);
 
       int boilSizeValue;
-      bool isToPulvorizer;
       Firebase.RTDB.setFloat(&fbdo, "Sensors/temperature", temp)) 
       Serial.print("Celsius temperature: ");
       Serial.print(temp); 
-
-       if (Firebase.RTDB.getInt(&fbdo, "Sizes/boilSize")) {
-          boilSize = fbdo.intData();
-          Serial.print("Seccess! Boil: ");
-          Serial.println(boilSize);
-          boilSizeValue = boilSize;
-      }
-
-       if (Firebase.RTDB.getBool(&fbdo, "Sizes/dryingStop")) {
-          toPulvorizer = fbdo.intData();
-          Serial.print("Seccess! Drying Status: ");
-          Serial.println(toPulvorizer);
-          isToPulvorizer = toPulvorizer;
-      }
-
 
     }
 
