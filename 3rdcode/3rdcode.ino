@@ -27,7 +27,6 @@ FirebaseConfig config;
 
 bool signupOK = false;
 
-
 unsigned long sendDataPrevMillis = 0;
 
 void setup() {
@@ -73,8 +72,9 @@ void setup() {
 }
 
 
-void dryingController(boilSizeValue) {
+void dryingController(int boilSizeValue, bool isDrying) {
 long startTime;
+if (boilSizeValue != 0 && isDrying) {
 long dryingTime = 20000 * boilSizeValue;
  while (millis() - startTime < dryingTime) {
         digitalWrite(dryingLinearActuator1, LOW);
@@ -88,9 +88,9 @@ long dryingTime = 20000 * boilSizeValue;
     digitalWrite(dryingLinearActuator1, HIGH);
     digitalWrite(dryingLinearActuator2, HIGH);
     Serial.println("Timer Ended. Both Relays OFF.");
-while (true);
+  while (true);
 }
-
+}
 
 
 void loop() {
@@ -98,9 +98,10 @@ void loop() {
     sendDataPrevMillis = millis();
 
     int boilSizeValue;
+    bool isDrying;
 
     if (Firebase.RTDB.getInt(&fbdo, "Sizes/boilSize")) {
-          boilSize = fbdo.intData();
+          int boilSize = fbdo.intData();
           Serial.print("Seccess! Boil: ");
           Serial.println(boilSize);
           boilSizeValue = boilSize;
@@ -109,7 +110,19 @@ void loop() {
         Serial.println("Failed to read Auto: " + fbdo.errorReason());
       }
 
-    dryingController(boilSizeValue); 
+     if (Firebase.RTDB.getBool(&fbdo, "Pass/isDrying")) {
+          bool boilSize = fbdo.boolData();
+          Serial.print("Seccess! Boil: ");
+          Serial.println(boilSize);
+          isDrying = boilSize;
+         
+      } else {
+        Serial.println("Failed to read Auto: " + fbdo.errorReason());
+      }
+
+
+
+    dryingController(boilSizeValue, isDrying); 
 
     Serial.println("_______________________________________");
   }
