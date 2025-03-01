@@ -73,22 +73,41 @@ void setup() {
 
 
 void dryingController(int boilSizeValue, bool isDrying) {
-long startTime;
 if (boilSizeValue != 0 && isDrying) {
-long dryingTime = 20000 * boilSizeValue;
+long startTime;
+long dryingTime = 30000 * boilSizeValue;
+long pulvorizeTime = 30000 * boilSizeValue;
+Firebase.RTDB.setInt(&fbdo, "Timer/drying", dryingTime);
  while (millis() - startTime < dryingTime) {
         digitalWrite(dryingLinearActuator1, LOW);
         digitalWrite(dryingLinearActuator2, HIGH);
-        delay(10000);  
+        delay(5000);  
         digitalWrite(dryingLinearActuator1, HIGH);
         digitalWrite(dryingLinearActuator2, LOW);
-        delay(10000);  
+        delay(5000);  
     }
-
     digitalWrite(dryingLinearActuator1, HIGH);
     digitalWrite(dryingLinearActuator2, HIGH);
-    Serial.println("Timer Ended. Both Relays OFF.");
-  while (true);
+  Firebase.RTDB.setBool(&fbdo, "Pass/isDrying", false);
+  Firebase.RTDB.setBool(&fbdo, "Pass/transferToPulvorizer", true);
+  digitalWrite(pushLinearActuator1, LOW);
+  digitalWrite(openLinearActuator1, LOW);
+   digitalWrite(pushLinearActuator2, HIGH);
+  digitalWrite(openLinearActuator2, HIGH);
+  delay(40000);
+  Firebase.RTDB.setBool(&fbdo, "Pass/transferToPulvorizer", false);
+  Firebase.RTDB.setBool(&fbdo, "Pass/pulvorizer", true);
+  digitalWrite(pulvorizer, LOW);
+  delay(pulvorizeTime);
+  Firebase.RTDB.setBool(&fbdo, "Pass/pulvorizer", false);
+  digitalWrite(pushLinearActuator1, HIGH);
+  digitalWrite(openLinearActuator1, HIGH);
+  digitalWrite(pushLinearActuator2, LOW);
+  digitalWrite(openLinearActuator2, LOW);
+  digitalWrite(pulvorizer, HIGH);
+  delay(20000);
+  digitalWrite(pushLinearActuator2, HIGH);
+  digitalWrite(openLinearActuator2, HIGH);
 }
 }
 
@@ -122,7 +141,7 @@ void loop() {
 
 
 
-    dryingController(boilSizeValue, isDrying); 
+    dryingController(boilSizeValue, isDrying);
 
     Serial.println("_______________________________________");
   }

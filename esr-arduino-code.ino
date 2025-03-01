@@ -99,6 +99,9 @@ void emergencyButton() {
   lastButtonState = currentButtonState;
 }
 
+
+
+
 void pumpToBoiler(int boilSizeValue, bool isExtractionStart) {
   if (boilSizeValue != 0 && isExtractionStart){
       int transferingTime = 40000 * boilSizeValue;
