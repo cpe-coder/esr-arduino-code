@@ -8,12 +8,12 @@
 
 
 #define dryingLinearActuator1 D0
-#define dryingLinearActuator2 D2
-#define pushLinearActuator1 D3
-#define pushLinearActuator2 D4
-#define openLinearActuator1 D5
-#define openLinearActuator2 D6
-#define pulvorizer D7
+#define dryingLinearActuator2 D1
+#define pushLinearActuator1 D2
+#define pushLinearActuator2 D3
+#define openLinearActuator1 D4
+#define openLinearActuator2 D5
+#define pulvorizer D6
 
 #define WIFI_SSID "So Good"
 #define WIFI_PASSWORD "helloworld"
