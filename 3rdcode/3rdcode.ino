@@ -15,6 +15,8 @@
 #define openLinearActuator2 D5
 #define pulvorizer D6
 
+unsigned long startTime;
+
 #define WIFI_SSID "So Good"
 #define WIFI_PASSWORD "helloworld"
 
@@ -31,6 +33,7 @@ unsigned long sendDataPrevMillis = 0;
 
 void setup() {
   Serial.begin(9600);
+  startTime = millis();
   pinMode(dryingLinearActuator1, OUTPUT);
   pinMode(dryingLinearActuator2, OUTPUT);
   pinMode(pushLinearActuator1, OUTPUT);
@@ -75,9 +78,10 @@ void setup() {
 void dryingController(int boilSizeValue, bool isDrying) {
 if (boilSizeValue != 0 && isDrying) {
 long startTime;
-long dryingTime = 30000 * boilSizeValue;
+const unsigned long dryingTime = 30000 * boilSizeValue;
 long pulvorizeTime = 30000 * boilSizeValue;
 Firebase.RTDB.setInt(&fbdo, "Timer/drying", dryingTime);
+Serial.println("Drying is working...");
  while (millis() - startTime < dryingTime) {
         digitalWrite(dryingLinearActuator1, LOW);
         digitalWrite(dryingLinearActuator2, HIGH);
@@ -88,16 +92,21 @@ Firebase.RTDB.setInt(&fbdo, "Timer/drying", dryingTime);
     }
     digitalWrite(dryingLinearActuator1, HIGH);
     digitalWrite(dryingLinearActuator2, HIGH);
+  while(true);
+  Serial.println("Drying is stop...");
   Firebase.RTDB.setBool(&fbdo, "Pass/isDrying", false);
   Firebase.RTDB.setBool(&fbdo, "Pass/transferToPulvorizer", true);
+  Serial.println("Transfer to pulvorizer is working...");
   digitalWrite(pushLinearActuator1, LOW);
   digitalWrite(openLinearActuator1, LOW);
-   digitalWrite(pushLinearActuator2, HIGH);
+  digitalWrite(pushLinearActuator2, HIGH);
   digitalWrite(openLinearActuator2, HIGH);
-  delay(40000);
+  delay(10000);
   Firebase.RTDB.setBool(&fbdo, "Pass/transferToPulvorizer", false);
+  Serial.println("Transfer to pulvorizer stop...");
   Firebase.RTDB.setBool(&fbdo, "Pass/pulvorizer", true);
   digitalWrite(pulvorizer, LOW);
+  Serial.println("pulvorizer is working...");
   delay(pulvorizeTime);
   Firebase.RTDB.setBool(&fbdo, "Pass/pulvorizer", false);
   digitalWrite(pushLinearActuator1, HIGH);
@@ -105,6 +114,7 @@ Firebase.RTDB.setInt(&fbdo, "Timer/drying", dryingTime);
   digitalWrite(pushLinearActuator2, LOW);
   digitalWrite(openLinearActuator2, LOW);
   digitalWrite(pulvorizer, HIGH);
+  Serial.println("pulvorizer stop...");
   delay(20000);
   digitalWrite(pushLinearActuator2, HIGH);
   digitalWrite(openLinearActuator2, HIGH);
@@ -112,17 +122,29 @@ Firebase.RTDB.setInt(&fbdo, "Timer/drying", dryingTime);
 }
 
 
+void emergencyCallback(bool isEmergency) {
+  if (isEmergency){
+    digitalWrite(dryingLinearActuator1, HIGH);
+    digitalWrite(dryingLinearActuator2, HIGH);
+    digitalWrite(pushLinearActuator1, HIGH);
+    digitalWrite(pushLinearActuator2, HIGH);
+    digitalWrite(openLinearActuator1, HIGH);
+    digitalWrite(openLinearActuator2, HIGH);
+    digitalWrite(pulvorizer, HIGH);
+    Firebase.RTDB.setBool(&fbdo, "Emergency/button", false);
+  }
+}
+
 void loop() {
   if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 500 || sendDataPrevMillis == 0)) {
     sendDataPrevMillis = millis();
 
     int boilSizeValue;
     bool isDrying;
+    bool isEmergency;
 
     if (Firebase.RTDB.getInt(&fbdo, "Sizes/boilSize")) {
           int boilSize = fbdo.intData();
-          Serial.print("Seccess! Boil: ");
-          Serial.println(boilSize);
           boilSizeValue = boilSize;
          
       } else {
@@ -130,17 +152,22 @@ void loop() {
       }
 
      if (Firebase.RTDB.getBool(&fbdo, "Pass/isDrying")) {
-          bool boilSize = fbdo.boolData();
-          Serial.print("Seccess! Boil: ");
-          Serial.println(boilSize);
-          isDrying = boilSize;
+          bool isDryingValue = fbdo.boolData();
+          isDrying = isDryingValue;
          
+      } else {
+        Serial.println("Failed to read Auto: " + fbdo.errorReason());
+      }
+     if (Firebase.RTDB.getBool(&fbdo, "Emergency/button")) {
+          bool emergencyValue = fbdo.boolData();
+          Serial.println(emergencyValue);
+          isEmergency = emergencyValue;
       } else {
         Serial.println("Failed to read Auto: " + fbdo.errorReason());
       }
 
 
-
+    emergencyCallback(isEmergency);
     dryingController(boilSizeValue, isDrying);
 
     Serial.println("_______________________________________");

@@ -14,7 +14,8 @@
 #define pumpToMainStorage D5
 #define pumpToBoilPin D6
 #define pumpToJuicePin D7
-#define pushButton D8
+#define transferingToDrying D8
+#define pushButton A0
 
 #define WIFI_SSID "So Good"
 #define WIFI_PASSWORD "helloworld"
@@ -43,6 +44,7 @@ void setup() {
   pinMode(boilPin1, OUTPUT);
   pinMode(boilPin2, OUTPUT);
   pinMode(pumpToBoilPin, OUTPUT);
+  pinMode(pumpToMainStorage, OUTPUT);
   pinMode(pumpToJuicePin, OUTPUT);
   pinMode(rotateBoiler, OUTPUT);
   digitalWrite(powerPin, HIGH);
@@ -50,6 +52,7 @@ void setup() {
   digitalWrite(boilPin1, HIGH);
   digitalWrite(boilPin2, HIGH);
   digitalWrite(pumpToBoilPin, HIGH);
+  digitalWrite(pumpToMainStorage, HIGH);
   digitalWrite(pumpToJuicePin, HIGH);
   digitalWrite(rotateBoiler, HIGH);
   Serial.begin(9600);
@@ -83,17 +86,30 @@ void emergencyButton() {
   currentButtonState = digitalRead(pushButton);
 
   if (currentButtonState == LOW && lastButtonState == HIGH) {
+      digitalWrite(powerPin, HIGH);
       digitalWrite(extractPin, HIGH);
+      digitalWrite(boilPin1, HIGH);
+      digitalWrite(boilPin2, HIGH);
       digitalWrite(pumpToBoilPin, HIGH);
+      digitalWrite(pumpToMainStorage, HIGH);
       digitalWrite(pumpToJuicePin, HIGH);
       digitalWrite(rotateBoiler, HIGH);
       Firebase.RTDB.setBool(&fbdo, "Controls/boil", false);
       Firebase.RTDB.setBool(&fbdo, "Controls/dry", false);
       Firebase.RTDB.setBool(&fbdo, "Controls/extract", false);
+      Firebase.RTDB.setBool(&fbdo, "Controls/filtered", false);
+      Firebase.RTDB.setBool(&fbdo, "Controls/power", false);
       Firebase.RTDB.setBool(&fbdo, "Controls/startExtraction", false);
       Firebase.RTDB.setBool(&fbdo, "Controls/startTransfering", false);
       Firebase.RTDB.setBool(&fbdo, "Pass/isCooking", false);
       Firebase.RTDB.setBool(&fbdo, "Pass/isDrying", false);
+      Firebase.RTDB.setBool(&fbdo, "Pass/pulvorizer", false);
+      Firebase.RTDB.setBool(&fbdo, "Pass/isDrying", false);
+      Firebase.RTDB.setBool(&fbdo, "Pass/transferToDrying", false);
+      Firebase.RTDB.setBool(&fbdo, "Pass/transferToPulvorizer", false);
+      Firebase.RTDB.setBool(&fbdo, "Emergency/button", true);
+      Serial.println("push button on");
+
   }
 
   lastButtonState = currentButtonState;
@@ -107,6 +123,7 @@ void pumpToBoiler(int boilSizeValue, bool isExtractionStart) {
       int transferingTime = 40000 * boilSizeValue;
       int cookingTime = 60000 * boilSizeValue;
       digitalWrite(pumpToBoilPin, LOW);
+      digitalWrite(transferingToDrying, HIGH);
       Serial.println("Pump to Boiler is working...");
       Firebase.RTDB.setInt(&fbdo, "Timer/juiceToBoiler", transferingTime);
       delay(transferingTime);
@@ -126,9 +143,14 @@ void pumpToBoiler(int boilSizeValue, bool isExtractionStart) {
       digitalWrite(boilPin2, HIGH);
       Serial.println("Boiler is stop...");
       Firebase.RTDB.setBool(&fbdo, "Pass/transferToDrying", true);
-      delay(120000);
+      digitalWrite(transferingToDrying, LOW);
+      Serial.println("Transfering to Drying...");
+      delay(10000);
+      Serial.println("Transfering to drying is stop...");
+      digitalWrite(transferingToDrying, LOW);
       Firebase.RTDB.setBool(&fbdo, "Pass/transferToDrying", false);
       Firebase.RTDB.setBool(&fbdo, "Pass/isDrying", true);
+
     }
 }
 
@@ -145,6 +167,20 @@ void pumpToJuiceStorage(int transferSizeValue, bool isTransferingStart) {
     }
 }
 
+
+void pumpToMainStorageMethod() {
+  if (Firebase.RTDB.getBool(&fbdo, "Controls/filtered")) {
+      if (fbdo.dataType() == "boolean"){
+        bool pumpToMainStorageStr = fbdo.boolData();
+        Serial.println("Seccess: " + fbdo.dataPath() + ": " + pumpToMainStorageStr + "(" + fbdo.dataType() + ")");
+        bool value = (pumpToMainStorageStr == false) ? HIGH : LOW;
+        digitalWrite(pumpToMainStorage, value);
+    }
+      
+    } else {
+      Serial.println("Failed to read Auto: " + fbdo.errorReason());
+    }
+}
 
 void loop() {
   if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 500 || sendDataPrevMillis == 0)) {
@@ -222,6 +258,7 @@ void loop() {
 
       pumpToBoiler(boilSizeValue, isExtractionStart);
       pumpToJuiceStorage(transferSizeValue,isTransferingStart );
+      pumpToMainStorageMethod();
       emergencyButton();
  
 
