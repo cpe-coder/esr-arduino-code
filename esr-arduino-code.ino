@@ -141,7 +141,6 @@ void pumpToBoiler(int boilSizeValue, bool isExtractionStart) {
       digitalWrite(transferingToDrying, HIGH);
       Firebase.RTDB.setBool(&fbdo, "Pass/transferToDrying", false);
       Firebase.RTDB.setBool(&fbdo, "Pass/isDrying", true);
-
     }
 }
 
