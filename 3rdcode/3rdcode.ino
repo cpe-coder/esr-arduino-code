@@ -19,8 +19,8 @@
 bool lastButtonState = LOW;
 bool currentButtonState;
 
-#define WIFI_SSID "So Good"
-#define WIFI_PASSWORD "helloworld"
+#define WIFI_SSID "betlog"
+#define WIFI_PASSWORD "dandineee"
 
 #define API_KEY "AIzaSyDIUvTegr1EgYJ9qgw7lqKSV2UoG75HKRk"
 #define DATABASE_URL "e-sugar-rush-default-rtdb.firebaseio.com/"
@@ -81,17 +81,17 @@ void dryingController(int boilSizeValue, bool isDrying) {
   long startTime;
   startTime = millis();
   if (boilSizeValue != 0 && isDrying) {
-    long dryingTime = 30000 * boilSizeValue;
-    long pulvorizeTime = 30000 * boilSizeValue;
+    long dryingTime = 400000 * boilSizeValue;
+    long pulvorizeTime = 60000 * boilSizeValue;
     Firebase.RTDB.setInt(&fbdo, "Timer/drying", dryingTime);
     Serial.println("Drying is working...");
     while (millis() - startTime < dryingTime) {
         digitalWrite(dryingLinearActuator1, LOW);
         digitalWrite(dryingLinearActuator2, HIGH);
-        delay(1000);  
+        delay(50000);  
         digitalWrite(dryingLinearActuator1, HIGH);
         digitalWrite(dryingLinearActuator2, LOW);
-        delay(1000);  
+        delay(50000);  
     }
     digitalWrite(dryingLinearActuator1, HIGH);
     digitalWrite(dryingLinearActuator2, HIGH);
@@ -101,7 +101,7 @@ void dryingController(int boilSizeValue, bool isDrying) {
     Serial.println("Transfer to pulvorizer is working...");
     digitalWrite(pushLinearActuator1, LOW);
     digitalWrite(openLinearActuator1, LOW);
-    delay(10000);
+    delay(55000);
     Firebase.RTDB.setBool(&fbdo, "Pass/transferToPulvorizer", false);
     Serial.println("Transfer to pulvorizer stop...");
     digitalWrite(pushLinearActuator1, HIGH);
@@ -115,7 +115,7 @@ void dryingController(int boilSizeValue, bool isDrying) {
     digitalWrite(openLinearActuator2, LOW);
     Firebase.RTDB.setBool(&fbdo, "Pass/pulvorizer", false);
     Serial.println("pulvorizer stop...");
-    delay(20000);
+    delay(55000);
     digitalWrite(pushLinearActuator2, HIGH);
     digitalWrite(openLinearActuator2, HIGH);
   }

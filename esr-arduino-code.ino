@@ -16,8 +16,8 @@
 #define pumpToJuicePin D7
 #define transferingToDrying D8
 
-#define WIFI_SSID "So Good"
-#define WIFI_PASSWORD "helloworld"
+#define WIFI_SSID "betlog"
+#define WIFI_PASSWORD "dandineee"
 
 #define API_KEY "AIzaSyDIUvTegr1EgYJ9qgw7lqKSV2UoG75HKRk"
 #define DATABASE_URL "e-sugar-rush-default-rtdb.firebaseio.com/"
@@ -111,8 +111,8 @@ void emergencyCallback(bool isEmergency) {
 
 void pumpToBoiler(int boilSizeValue, bool isExtractionStart) {
   if (boilSizeValue != 0 && isExtractionStart){
-      int transferingTime = 40000 * boilSizeValue;
-      int cookingTime = 60000 * boilSizeValue;
+      int transferingTime = 50000 * boilSizeValue;
+      int cookingTime = 10000 * boilSizeValue;
       digitalWrite(pumpToBoilPin, LOW);
       digitalWrite(transferingToDrying, HIGH);
       Serial.println("Pump to Boiler is working...");
@@ -136,7 +136,7 @@ void pumpToBoiler(int boilSizeValue, bool isExtractionStart) {
       Firebase.RTDB.setBool(&fbdo, "Pass/transferToDrying", true);
       digitalWrite(transferingToDrying, LOW);
       Serial.println("Transfering to Drying...");
-      delay(10000);
+      delay(90000 * boilSizeValue);
       Serial.println("Transfering to drying is stop...");
       digitalWrite(transferingToDrying, HIGH);
       Firebase.RTDB.setBool(&fbdo, "Pass/transferToDrying", false);

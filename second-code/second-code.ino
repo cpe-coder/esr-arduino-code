@@ -21,8 +21,8 @@ OneWire oneWire(ONE_WIRE_BUS);
 
 DallasTemperature sensors(&oneWire);
 
-#define WIFI_SSID "So Good"
-#define WIFI_PASSWORD "helloworld"
+#define WIFI_SSID "betlog"
+#define WIFI_PASSWORD "dandineee"
 
 #define API_KEY "AIzaSyDIUvTegr1EgYJ9qgw7lqKSV2UoG75HKRk"
 #define DATABASE_URL "e-sugar-rush-default-rtdb.firebaseio.com/"
